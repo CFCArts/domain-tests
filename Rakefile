@@ -44,3 +44,8 @@ task :clean do
     rm_rf File.join(File.dirname(__FILE__), path)
   end
 end
+
+desc "Clear macOS DNS cache"
+task :flushcache do
+  `set -x; sudo killall -HUP mDNSResponder; sudo killall mDNSResponderHelper; sudo dscacheutil -flushcache`
+end
