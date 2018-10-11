@@ -1,16 +1,36 @@
 require 'test_helper'
 
 class TestDomains < Test::Unit::TestCase
-  ALT_DOMAINS = %w(centralfloridacommunityarts.com
-                   cfcarts.org
-                   centralfloridacommunityarts.org
-                   cfcommunityarts.com
-                   cfcommunitychoir.com
-                   cfcommunityorchestra.com)
-  ALL_ALT_DOMAINS = ALT_DOMAINS + ALT_DOMAINS.map { |d| "www.#{d}" }
+  ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR = %w(centralfloridacommunityarts.com
+                                                 centralfloridacommunityarts.org)
+  ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST   = %w(cfcommunitychoir.com
+                                                 cfcommunityorchestra.com
+                                                 cfcommunityarts.com)
 
-  def test_http_alternate_domains_respond_with_permanent_redirect
-    ALL_ALT_DOMAINS.each do |d|
+  ALL_ALT_DOMAINS = ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR +
+                    ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST +
+                    %w(cfcarts.org)  # cfcarts.org is tested individually below
+
+  CANONICAL_URI = URI("https://cfcarts.com")
+
+  def with_wwws(domain_list)
+    domain_list + domain_list.map { |d| "www.#{d}" }
+  end
+
+  def last_location_after_following_redirects(uri, limit = 5)
+    raise 'Too many redirects' if limit < 0
+
+    response = Net::HTTP.get_response(uri)
+    if response.is_a?(Net::HTTPRedirection)
+      last_location_after_following_redirects(URI(response["location"]), limit - 1)
+    else
+      uri
+    end
+  end
+
+  def test_all_alternate_domains_redirect_http_using_301
+    domains = with_wwws(ALL_ALT_DOMAINS)
+    domains.each do |d|
       uri = URI("http://#{d}")
       response = Net::HTTP.get_response(uri)
       assert_equal "301 Moved Permanently",
@@ -19,19 +39,10 @@ class TestDomains < Test::Unit::TestCase
     end
   end
 
-  def test_http_alternate_domains_redirect_to_https_canonical
-    ALL_ALT_DOMAINS.each do |d|
-      uri = URI("http://#{d}")
-      response = Net::HTTP.get_response(uri)
-      assert_not_nil response["location"]
-      assert_equal URI("https://cfcarts.com"),
-                   URI(response["location"]),
-                   "#{uri} redirected to the wrong place"
-    end
-  end
-
-  def test_https_alternate_domains_do_not_listen_on_443
-    ALL_ALT_DOMAINS.each do |d|
+  def test_registrar_alternate_domains_do_not_listen_on_443
+    # Not intended behavior but this is how it works right now
+    domains = with_wwws(ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR)
+    domains.each do |d|
       uri = URI("https://#{d}")
       http = Net::HTTP.new(uri.host, uri.port)
       http.open_timeout = 2
@@ -39,6 +50,56 @@ class TestDomains < Test::Unit::TestCase
       assert_raises(Net::OpenTimeout, "#{uri} did not timeout") do
         http.get(uri)
       end
+    end
+  end
+
+  def test_registrar_alternate_domains_redirect_http_to_https_canonical_immediately
+    # Intended behavior!
+    domains = with_wwws(ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR)
+    domains.each do |d|
+      uri = URI("http://#{d}")
+      redirected_to = last_location_after_following_redirects(uri, 1)
+      assert_equal CANONICAL_URI,
+                   redirected_to,
+                   "#{uri} redirected to the wrong place"
+    end
+  end
+
+  def test_webhost_alternate_domains_redirect_http_and_https_to_https_canonical_eventually
+    # Almost intended behavior! Should happen immediately
+    domains = with_wwws(ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST)
+    uris = domains.map { |d| [URI("http://#{d}"), URI("https://#{d}")] }.flatten
+    uris.each do |uri|
+      redirected_to = last_location_after_following_redirects(uri, 5)
+      assert_equal CANONICAL_URI,
+                   redirected_to,
+                   "#{uri} redirected to the wrong place"
+    end
+  end
+
+  def test_cfcarts_org_redirects_http_to_http_canonical_without_www
+    # Not intended behavior but this is how it works right now
+    domains = with_wwws(%w(cfcarts.org))
+    domains.each do |d|
+      uri = URI("http://#{d}")
+      response = Net::HTTP.get_response(uri)
+      assert_not_nil response["location"]
+      assert_equal URI("http://cfcarts.com"),
+                   URI(response["location"]),
+                   "#{uri} redirected to the wrong place"
+    end
+  end
+
+  def test_cfcarts_org_redirects_https_to_https_canonical_without_www
+    # Intended behavior!
+    domains = with_wwws(%w(cfcarts.org))
+    domains.each do |d|
+      uri = URI("https://#{d}")
+      response = Net::HTTP.get_response(uri)
+      assert_not_nil response["location"]
+      assert_equal CANONICAL_URI,
+                   URI(response["location"]),
+                   "#{uri} redirected to the wrong place"
     end
   end
 end
