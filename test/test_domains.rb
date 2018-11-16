@@ -103,4 +103,16 @@ class TestDomains < Test::Unit::TestCase
                    "#{uri} redirected to the wrong place"
     end
   end
+
+  def test_www_cfcarts_com_redirects_https_to_https_canonical_without_www
+    uri = URI("https://www.cfcarts.com")
+    response = Net::HTTP.get_response(uri)
+    assert_equal "301 Moved Permanently",
+                 "#{response.code} #{response.message}",
+                 "#{uri} had the wrong response code"
+    assert_not_nil response["location"]
+    assert_equal CANONICAL_URI,
+                 URI(response["location"]),
+                 "#{uri} redirected to the wrong place"
+  end
 end
