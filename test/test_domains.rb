@@ -48,7 +48,8 @@ class TestDomains < Test::Unit::TestCase
       http = Net::HTTP.new(uri.host, uri.port)
       http.open_timeout = 2
       http.use_ssl = true
-      assert_raises(Net::OpenTimeout, "#{uri} did not timeout") do
+      expected_exceptions = [Net::OpenTimeout, Errno::ECONNREFUSED]
+      assert_raises(*expected_exceptions, "#{uri} responded but shouldn't have") do
         http.get(uri)
       end
     end
