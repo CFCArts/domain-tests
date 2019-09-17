@@ -5,7 +5,6 @@ class TestDomains < Test::Unit::TestCase
                                                  centralfloridacommunityarts.org
                                                  cfcarts.net)
   ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST   = %w(cfcommunitychoir.com
-                                                 cfcommunityorchestra.com
                                                  cfcommunityarts.com)
 
   ALL_ALT_DOMAINS = ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR +
