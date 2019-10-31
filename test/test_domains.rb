@@ -3,13 +3,13 @@ require 'test_helper'
 class TestDomains < Test::Unit::TestCase
   ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR = %w(centralfloridacommunityarts.com
                                                  centralfloridacommunityarts.org
-                                                 cfcarts.net)
+                                                 cfcarts.net
+                                                 cfcarts.org)
   ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST   = %w(cfcommunitychoir.com
                                                  cfcommunityarts.com)
 
   ALL_ALT_DOMAINS = ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR +
-                    ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST +
-                    %w(cfcarts.org)  # cfcarts.org is tested individually below
+                    ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST
 
   CANONICAL_URI = URI("https://cfcarts.com")
 
@@ -74,32 +74,6 @@ class TestDomains < Test::Unit::TestCase
       redirected_to = last_location_after_following_redirects(uri, 5)
       assert_equal CANONICAL_URI,
                    redirected_to,
-                   "#{uri} redirected to the wrong place"
-    end
-  end
-
-  def test_cfcarts_org_redirects_http_to_http_canonical_without_www
-    # Not intended behavior but this is how it works right now
-    domains = with_wwws(%w(cfcarts.org))
-    domains.each do |d|
-      uri = URI("http://#{d}")
-      response = Net::HTTP.get_response(uri)
-      assert_not_nil response["location"]
-      assert_equal URI("http://cfcarts.com"),
-                   URI(response["location"]),
-                   "#{uri} redirected to the wrong place"
-    end
-  end
-
-  def test_cfcarts_org_redirects_https_to_https_canonical_without_www
-    # Intended behavior!
-    domains = with_wwws(%w(cfcarts.org))
-    domains.each do |d|
-      uri = URI("https://#{d}")
-      response = Net::HTTP.get_response(uri)
-      assert_not_nil response["location"]
-      assert_equal CANONICAL_URI,
-                   URI(response["location"]),
                    "#{uri} redirected to the wrong place"
     end
   end
