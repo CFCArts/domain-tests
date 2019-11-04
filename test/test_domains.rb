@@ -3,10 +3,10 @@ require 'test_helper'
 class TestDomains < Test::Unit::TestCase
   ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR = %w(centralfloridacommunityarts.com
                                                  centralfloridacommunityarts.org
+                                                 cfcommunitychoir.com
                                                  cfcarts.net
                                                  cfcarts.org)
-  ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST   = %w(cfcommunitychoir.com
-                                                 cfcommunityarts.com)
+  ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST   = %w(cfcommunityarts.com)
 
   ALL_ALT_DOMAINS = ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR +
                     ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST
