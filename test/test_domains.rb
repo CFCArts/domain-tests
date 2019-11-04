@@ -11,6 +11,8 @@ class TestDomains < Test::Unit::TestCase
   ALL_ALT_DOMAINS = ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR +
                     ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST
 
+  MAIL_DOMAINS = %w(cfcarts.com cfcommunityarts.com)
+
   CANONICAL_URI = URI("https://cfcarts.com")
 
   def with_wwws(domain_list)
@@ -71,6 +73,41 @@ class TestDomains < Test::Unit::TestCase
       ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR.each do |d|
         records = dns.getresources(d, Resolv::DNS::Resource::IN::MX)
         assert_empty records, "#{d} has #{records.count } MX records"
+      end
+    end
+  end
+
+  def test_mail_domains_have_mx_records_for_gmail
+    # As specified by Google here https://support.google.com/a/answer/140034
+    expected = [
+      {priority: 1,  value: "aspmx.l.google.com"},
+      {priority: 5,  value: "alt1.aspmx.l.google.com"},
+      {priority: 5,  value: "alt2.aspmx.l.google.com"},
+      {priority: 10, value: "alt3.aspmx.l.google.com"},
+      {priority: 10, value: "alt4.aspmx.l.google.com"}
+    ]
+    Resolv::DNS.open do |dns|
+      MAIL_DOMAINS.each do |d|
+        mx_records = dns.getresources(d, Resolv::DNS::Resource::IN::MX).map { |rec|
+          {priority: rec.preference, value: rec.exchange.to_s}
+        }.sort_by { |rec|
+          [rec[:priority], rec[:value]]
+        }
+        assert_equal expected, mx_records, "#{d} has unexpected MX records"
+      end
+    end
+  end
+
+  def test_mail_domains_mx_records_have_sane_ttls
+    # Google suggests 1 hour; some are shorter now; longer seems appropriate
+    sanity_cutoff_in_sec = 30 * 60
+    Resolv::DNS.open do |dns|
+      MAIL_DOMAINS.each do |d|
+        records = dns.getresources(d, Resolv::DNS::Resource::IN::MX)
+        records.each do |rec|
+          assert_compare sanity_cutoff_in_sec, "<=", rec.ttl,
+                         "#{d} has an MX record with a TTL of only #{rec.ttl} seconds"
+        end
       end
     end
   end
