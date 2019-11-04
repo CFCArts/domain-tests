@@ -66,6 +66,15 @@ class TestDomains < Test::Unit::TestCase
     end
   end
 
+  def test_alternate_domains_do_not_have_mx_records
+    Resolv::DNS.open do |dns|
+      ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR.each do |d|
+        records = dns.getresources(d, Resolv::DNS::Resource::IN::MX)
+        assert_empty records, "#{d} has #{records.count } MX records"
+      end
+    end
+  end
+
   def test_webhost_alternate_domains_redirect_http_and_https_to_https_canonical_eventually
     # Almost intended behavior! Should happen immediately
     domains = with_wwws(ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST)
