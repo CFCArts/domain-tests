@@ -7,10 +7,8 @@ class TestDomains < Test::Unit::TestCase
                                                  cfcommunitychoir.com
                                                  cfcarts.net
                                                  cfcarts.org)
-  ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST   = %w()
 
-  ALL_ALT_DOMAINS = ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR +
-                    ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST
+  ALL_ALT_DOMAINS = ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR
 
   MAIL_DOMAINS = %w(cfcarts.com cfcommunityarts.com)
 
@@ -111,18 +109,6 @@ class TestDomains < Test::Unit::TestCase
                          "#{d} has an MX record with a TTL of only #{rec.ttl} seconds"
         end
       end
-    end
-  end
-
-  def test_webhost_alternate_domains_redirect_http_and_https_to_https_canonical_eventually
-    # Almost intended behavior! Should happen immediately
-    domains = with_wwws(ALT_DOMAINS_WITH_DNS_MANAGED_BY_WEBHOST)
-    uris = domains.map { |d| [URI("http://#{d}"), URI("https://#{d}")] }.flatten
-    uris.each do |uri|
-      redirected_to = last_location_after_following_redirects(uri, 5)
-      assert_equal CANONICAL_URI,
-                   redirected_to,
-                   "#{uri} redirected to the wrong place"
     end
   end
 
