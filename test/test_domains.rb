@@ -97,8 +97,8 @@ class TestDomains < Test::Unit::TestCase
   end
 
   def test_mail_domains_mx_records_have_sane_ttls
-    # Google suggests 1 hour; some are shorter now; longer seems appropriate
-    sanity_cutoff_in_sec = 30 * 60
+    # Google suggests 1 hour; longer seems appropriate
+    sanity_cutoff_in_sec = 60 * 60
     Resolv::DNS.open do |dns|
       MAIL_DOMAINS.each do |d|
         records = dns.getresources(d, Resolv::DNS::Resource::IN::MX)
