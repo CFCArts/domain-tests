@@ -110,6 +110,19 @@ class TestDomains < Test::Unit::TestCase
     end
   end
 
+  def test_mail_domains_have_mail_subdomain_shortcut
+    Resolv::DNS.open do |dns|
+      MAIL_DOMAINS.each do |d|
+        d = "mail.#{d}"
+        records = dns.getresources(d, Resolv::DNS::Resource::IN::CNAME)
+        assert_equal 1, records.count,
+                     "#{d} does not have a CNAME record pointing to Google"
+        assert_equal "ghs.googlehosted.com", records.first.name.to_s,
+                     "#{d} has a CNAME pointing to #{records.first.name}"
+      end
+    end
+  end
+
   def test_www_cfcarts_com_redirects_to_https_canonical_without_www
     # Intended behavior!
     uris = [URI("http://www.cfcarts.com"), URI("https://www.cfcarts.com")]
