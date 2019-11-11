@@ -70,8 +70,9 @@ class TestDomains < Test::Unit::TestCase
   end
 
   def test_alternate_domains_do_not_have_mx_records
+    alt_domains_without_mx_records = ALL_ALT_DOMAINS - MAIL_DOMAINS
     Resolv::DNS.open do |dns|
-      ALT_DOMAINS_WITH_DNS_MANAGED_BY_REGISTRAR.each do |d|
+      alt_domains_without_mx_records.each do |d|
         records = dns.getresources(d, Resolv::DNS::Resource::IN::MX)
         assert_empty records, "#{d} has #{records.count } MX records"
       end
