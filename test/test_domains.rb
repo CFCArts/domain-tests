@@ -65,6 +65,21 @@ class TestDomains < Test::Unit::TestCase
     end
   end
 
+  def test_www_cfcarts_com_redirects_to_https_canonical_without_www
+    # Intended behavior!
+    uris = [URI("http://www.cfcarts.com"), URI("https://www.cfcarts.com")]
+    uris.each do |uri|
+      response = Net::HTTP.get_response(uri)
+      assert_equal "301 Moved Permanently",
+                   "#{response.code} #{response.message}",
+                   "#{uri} had the wrong response code"
+      assert_not_nil response["location"]
+      assert_equal CANONICAL_URI,
+                   URI(response["location"]),
+                   "#{uri} redirected to the wrong place"
+    end
+  end
+
   def test_alternate_domains_do_not_have_mx_records
     alt_domains_without_mx_records = ALT_DOMAINS - MAIL_DOMAINS
     Resolv::DNS.open do |dns|
@@ -120,21 +135,6 @@ class TestDomains < Test::Unit::TestCase
         assert_equal "ghs.googlehosted.com", records.first.name.to_s,
                      "#{d} has a CNAME pointing to #{records.first.name}"
       end
-    end
-  end
-
-  def test_www_cfcarts_com_redirects_to_https_canonical_without_www
-    # Intended behavior!
-    uris = [URI("http://www.cfcarts.com"), URI("https://www.cfcarts.com")]
-    uris.each do |uri|
-      response = Net::HTTP.get_response(uri)
-      assert_equal "301 Moved Permanently",
-                   "#{response.code} #{response.message}",
-                   "#{uri} had the wrong response code"
-      assert_not_nil response["location"]
-      assert_equal CANONICAL_URI,
-                   URI(response["location"]),
-                   "#{uri} redirected to the wrong place"
     end
   end
 end
