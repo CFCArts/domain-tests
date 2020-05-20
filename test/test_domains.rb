@@ -148,10 +148,12 @@ class TestDomains < Test::Unit::TestCase
   end
 
   def test_mail_domains_mx_records_have_sane_ttls
-    # Google suggests 1 hour; longer seems appropriate
-    # TODO: investigate new intermittent failure: Namecheap seems to be
-    # responding with TTLs that are sort of random, from 0 to the expected TTL.
+    # Google suggests 1 hour; longer seems appropriate.
+    # Namecheap (or a cache in between) seems to be subtracting jitter from the
+    # configured TTLs. Sometimes it's a little, which is fine. But sometimes
+    # it's sort of random, from 0 to the expected TTL. Allow 20% for now.
     sanity_cutoff_in_sec = 60 * 60
+    sanity_cutoff_in_sec *= 0.8
     Resolv::DNS.open do |dns|
       MAIL_DOMAINS.each do |d|
         records = dns.getresources(d, Resolv::DNS::Resource::IN::MX)
