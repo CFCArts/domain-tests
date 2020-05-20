@@ -111,7 +111,7 @@ class TestDomains < Test::Unit::TestCase
     end
   end
 
-  def test_mail_domains_have_dkim_records_for_approved_senders
+  def test_mail_domains_have_txt_dkim_records_for_approved_senders
     domains = %w(google._domainkey 2020220560._domainkey).flat_map { |name|
       MAIL_DOMAINS.map { |d| "#{name}.#{d}" }
     }
@@ -126,6 +126,29 @@ class TestDomains < Test::Unit::TestCase
                      "#{d}'s TXT record doesn't look like a DKIM record"
       end
     end
+  end
+
+  def test_mail_domains_have_cnames_for_emma_dkim_system
+    # https://support.e2ma.net/s/article/DomainKeys-Identified-Mail-DKIM
+    expected_cnames = {
+      "e2ma-k1._domainkey" => "e2ma-k1.dkim.e2ma.net",
+      "e2ma-k2._domainkey" => "e2ma-k2.dkim.e2ma.net",
+      "e2ma-k3._domainkey" => "e2ma-k3.dkim.e2ma.net"
+    }
+    domains = expected_cnames.keys.flat_map { |name|
+      MAIL_DOMAINS.map { |d| "#{name}.#{d}" }
+    }
+
+    Resolv::DNS.open do |dns|
+      expected_cnames.each do |d, value|
+        records = dns.getresources(d, Resolv::DNS::Resource::IN::CNAME)
+        assert_equal 1, records.count,
+                     "#{d} does not have a CNAME record for Emma's DKIM system"
+        assert_equal value, records.first.name.to_s,
+                     "#{d} has a CNAME pointing to #{records.first.name}"
+      end
+    end
+
   end
 
   def test_mail_domains_mx_records_have_sane_ttls
