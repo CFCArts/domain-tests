@@ -111,6 +111,23 @@ class TestDomains < Test::Unit::TestCase
     end
   end
 
+  def test_mail_domains_have_dkim_records_for_approved_senders
+    domains = %w(google._domainkey 2020220560._domainkey).flat_map { |name|
+      MAIL_DOMAINS.map { |d| "#{name}.#{d}" }
+    }
+    # Constant Contact only lets you DKIM one domain =/
+    domains.delete("2020220560._domainkey.cfcommunityarts.com")
+
+    Resolv::DNS.open do |dns|
+      domains.each do |d|
+        records = dns.getresources(d, Resolv::DNS::Resource::IN::TXT)
+        assert_equal 1, records.count, "#{d} is not a TXT record"
+        assert_match %r|k=rsa; p=[a-zA-Z0-9+/]+$|, records.first.data,
+                     "#{d}'s TXT record doesn't look like a DKIM record"
+      end
+    end
+  end
+
   def test_mail_domains_mx_records_have_sane_ttls
     # Google suggests 1 hour; longer seems appropriate
     sanity_cutoff_in_sec = 60 * 60
