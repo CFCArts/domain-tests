@@ -154,7 +154,7 @@ class TestDomains < Test::Unit::TestCase
       MAIL_DOMAINS.each do |d|
         records = dns.getresources(d, Resolv::DNS::Resource::IN::MX)
         records.each do |rec|
-          assert_compare sanity_cutoff_in_sec, "<=", rec.ttl,
+          assert_compare rec.ttl, ">=", sanity_cutoff_in_sec,
                          "#{d} has an MX record with a TTL of only #{rec.ttl} seconds"
         end
       end
