@@ -147,6 +147,26 @@ class TestDomains < Test::Unit::TestCase
     end
   end
 
+  def test_mail_domains_have_cnames_for_salesforce_dkim_system
+    # https://help.salesforce.com/articleView?id=emailadmin_create_secure_dkim.htm
+    expected_cnames = {
+      "salesforce1._domainkey.cfcarts.com"         => "salesforce1.s4zqqr.custdkim.salesforce.com",
+      "salesforce2._domainkey.cfcarts.com"         => "salesforce2.3jhvo5.custdkim.salesforce.com",
+      "salesforce1._domainkey.cfcommunityarts.com" => "salesforce1.khhamd.custdkim.salesforce.com",
+      "salesforce2._domainkey.cfcommunityarts.com" => "salesforce2.33hm7p.custdkim.salesforce.com"
+    }
+
+    Resolv::DNS.open do |dns|
+      expected_cnames.each do |d, value|
+        records = dns.getresources(d, Resolv::DNS::Resource::IN::CNAME)
+        assert_equal 1, records.count,
+                     "#{d} does not have a CNAME record for Salesforce's DKIM system"
+        assert_equal value, records.first.name.to_s,
+                     "#{d} has a CNAME pointing to #{records.first.name}"
+      end
+    end
+  end
+
   def test_mail_domains_mx_records_have_sane_ttls
     # Google suggests 1 hour; longer seems appropriate.
     # Namecheap (or a cache in between) seems to be subtracting jitter from the
