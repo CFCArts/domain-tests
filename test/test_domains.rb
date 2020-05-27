@@ -121,9 +121,10 @@ class TestDomains < Test::Unit::TestCase
     Resolv::DNS.open do |dns|
       domains.each do |d|
         records = dns.getresources(d, Resolv::DNS::Resource::IN::TXT)
-        assert_equal 1, records.count, "#{d} is not a TXT record"
+        records.select! { |r| r.data.start_with?("v=DKIM1;") }
+        assert_equal 1, records.count, "#{d} is not a TXT record starting with v=DKIM1;"
         assert_match %r|k=rsa; p=[a-zA-Z0-9+/]+$|, records.first.data,
-                     "#{d}'s TXT record doesn't look like a DKIM record"
+                     "The rest of the DKIM record at #{d} doesn't follow the expected format"
       end
     end
   end
