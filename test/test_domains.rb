@@ -169,7 +169,6 @@ class TestDomains < Test::Unit::TestCase
   end
 
   def test_mail_domains_have_spf_records_for_approved_senders
-    domains = %w(cfcarts.com)
     # Gmail: https://support.google.com/a/answer/33786?hl=en
     # CC: https://knowledgebase.constantcontact.com/articles/KnowledgeBase/34717-SPF-Self-Publishing-for-Email-Authentication
     # Emma: https://support.e2ma.net/s/article/Starting-Off-Strong-with-Deliverability-Best-Practices
@@ -181,7 +180,7 @@ class TestDomains < Test::Unit::TestCase
       include:_spf.salesforce.com
     )
     Resolv::DNS.open do |dns|
-      domains.each do |d|
+      MAIL_DOMAINS.each do |d|
         records = dns.getresources(d, Resolv::DNS::Resource::IN::TXT)
         records.select! { |r| r.data.start_with?("v=spf1 ") }
         assert_equal 1, records.count, "#{d} should have a single TXT record starting with v=spf1"
