@@ -168,6 +168,32 @@ class TestDomains < Test::Unit::TestCase
     end
   end
 
+  def test_mail_domains_have_spf_records_for_approved_senders
+    domains = %w(cfcarts.com)
+    # Gmail: https://support.google.com/a/answer/33786?hl=en
+    # CC: https://knowledgebase.constantcontact.com/articles/KnowledgeBase/34717-SPF-Self-Publishing-for-Email-Authentication
+    # Emma: https://support.e2ma.net/s/article/Starting-Off-Strong-with-Deliverability-Best-Practices
+    # Salesforce: https://help.salesforce.com/articleView?id=000315520&type=1&mode=1
+    expected_tokens = %w(
+      include:_spf.google.com
+      include:spf.constantcontact.com
+      include:e2ma.net
+      include:_spf.salesforce.com
+    )
+    Resolv::DNS.open do |dns|
+      domains.each do |d|
+        records = dns.getresources(d, Resolv::DNS::Resource::IN::TXT)
+        records.select! { |r| r.data.start_with?("v=spf1 ") }
+        assert_equal 1, records.count, "#{d} should have a single TXT record starting with v=spf1"
+        tokens = records.first.data.split(" ")[1..-1]
+        first_token, last_token = tokens.shift, tokens.pop
+        assert_equal "a", first_token, "The SPF record should permit sending from the web server"
+        assert_equal "~all", last_token, "The SPF record should be set to soft-fail"
+        assert_equal expected_tokens.sort, tokens.sort, "The expected SPF entries did not match the record"
+      end
+    end
+  end
+
   def test_mail_domains_mx_records_have_sane_ttls
     # Google suggests 1 hour; longer seems appropriate.
     # Namecheap (or a cache in between) seems to be subtracting jitter from the
