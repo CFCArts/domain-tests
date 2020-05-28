@@ -85,7 +85,7 @@ class TestDomains < Test::Unit::TestCase
     Resolv::DNS.open do |dns|
       alt_domains_without_mx_records.each do |d|
         records = dns.getresources(d, Resolv::DNS::Resource::IN::MX)
-        assert_empty records, "#{d} has #{records.count } MX records"
+        assert_empty records, "#{d} shouldn't have any MX records, but has #{records.count}"
       end
     end
   end
@@ -122,7 +122,7 @@ class TestDomains < Test::Unit::TestCase
       domains.each do |d|
         records = dns.getresources(d, Resolv::DNS::Resource::IN::TXT)
         records.select! { |r| r.data.start_with?("v=DKIM1;") }
-        assert_equal 1, records.count, "#{d} is not a TXT record starting with v=DKIM1;"
+        assert_equal 1, records.count, "#{d} should have one TXT record starting with v=DKIM1;"
         assert_match %r|k=rsa; p=[a-zA-Z0-9+/]+$|, records.first.data,
                      "The rest of the DKIM record at #{d} doesn't follow the expected format"
       end
