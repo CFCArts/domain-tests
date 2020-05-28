@@ -174,13 +174,13 @@ class TestDomains < Test::Unit::TestCase
     # configured TTLs. Sometimes it's a little, which is fine. But sometimes
     # it's sort of random, from 0 to the expected TTL. Allow 20% for now.
     sanity_cutoff_in_sec = 60 * 60
-    sanity_cutoff_in_sec *= 0.8
+    allowed_jitter = 0.2
     Resolv::DNS.open do |dns|
       MAIL_DOMAINS.each do |d|
         records = dns.getresources(d, Resolv::DNS::Resource::IN::MX)
         records.each do |rec|
-          assert_compare rec.ttl, ">=", sanity_cutoff_in_sec,
-                         "#{d} has an MX record with a TTL of only #{rec.ttl} seconds"
+          assert_in_epsilon sanity_cutoff_in_sec, rec.ttl, allowed_jitter,
+                            "#{d} has an MX record with a TTL of only #{rec.ttl} seconds"
         end
       end
     end
