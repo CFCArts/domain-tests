@@ -127,6 +127,8 @@ class TestDomains < Test::Unit::TestCase
                      "The rest of the DKIM record at #{d} doesn't follow the expected format"
       end
     end
+
+    pend "Vendini also needs a DKIM record"
   end
 
   def test_mail_domains_have_cnames_for_emma_dkim_system
