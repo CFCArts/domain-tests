@@ -150,6 +150,21 @@ class TestDomains < Test::Unit::TestCase
     end
   end
 
+  def test_mail_domains_have_txt_record_for_emma_dkim
+    # Intentionally using only cfcarts.com for Emma
+    domains = %w(cfcarts.com)
+
+    Resolv::DNS.open do |dns|
+      domains.each do |d|
+        records = dns.getresources(d, Resolv::DNS::Resource::IN::TXT)
+        records.select! { |r| r.data.start_with?("e2ma-verification=") }
+        assert_equal 1, records.count, "#{d} should have one TXT record starting with e2ma-verification="
+        assert_equal "e2ma-verification=fgefb", records.first.data,
+                     "The Emma TXT record for DKIM doesn't have the right verification hash"
+      end
+    end
+  end
+
   def test_mail_domains_have_cnames_for_salesforce_dkim_system
     # https://help.salesforce.com/articleView?id=emailadmin_create_secure_dkim.htm
     expected_cnames = {
