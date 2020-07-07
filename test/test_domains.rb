@@ -244,7 +244,7 @@ class TestDomains < Test::Unit::TestCase
   def test_pm_shortcut_redirects_to_patronmanager_using_301
     uri = URI("http://pm.cfcarts.com")
     response = Net::HTTP.get_response(uri)
-    assert_equal "https://patronmanager.cloudforce.com",
+    assert_equal "https://cfcarts.lightning.force.com",
                  response["location"],
                  "#{uri} redirected to the wrong place"
     assert_equal "301 Moved Permanently",
