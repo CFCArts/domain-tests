@@ -251,4 +251,15 @@ class TestDomains < Test::Unit::TestCase
                  "#{response.code} #{response.message}",
                  "#{uri} had the wrong response code"
   end
+
+  def test_pmhelp_shortcut_redirects_to_bitly_url_using_302
+    uri = URI("http://pmhelp.cfcarts.com")
+    response = Net::HTTP.get_response(uri)
+    assert_match %r(^https://bit.ly/[0-9A-Za-z]+$),
+                 response["location"],
+                 "#{uri} redirected to the wrong place"
+    assert_equal "302 Found",
+                 "#{response.code} #{response.message}",
+                 "#{uri} had the wrong response code"
+  end
 end
