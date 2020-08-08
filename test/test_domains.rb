@@ -260,4 +260,15 @@ class TestDomains < Test::Unit::TestCase
                  "#{response.code} #{response.message}",
                  "#{uri} had the wrong response code"
   end
+
+  def test_pts_shortcut_redirects_to_patronmanager_public_ticketing_site_using_302
+    uri = URI("http://pts.cfcarts.com")
+    response = Net::HTTP.get_response(uri)
+    assert_equal "https://cfcarts.secure.force.com/ticket/",
+                 response["location"],
+                 "#{uri} redirected to the wrong place"
+    assert_equal "302 Found",
+                 "#{response.code} #{response.message}",
+                 "#{uri} had the wrong response code"
+  end
 end
