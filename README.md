@@ -10,5 +10,8 @@ To run with output that lists each test run, invoke `rake TESTOPTS=-v`.
 To run a single test, run something like:
 
 ```sh
+rake TESTOPTS="--name=test_name"
+
+# Or invoke ruby directly
 ruby -Itest test/test_domains.rb -n test_name
 ```
