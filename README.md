@@ -5,6 +5,8 @@ automatically check the redirection/DNS behavior of our domain names.
 
 To run, invoke `rake`.
 
+To run with output that lists each test run, invoke `rake TESTOPTS=-v`.
+
 To run a single test, run something like:
 
 ```sh
