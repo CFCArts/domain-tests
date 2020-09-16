@@ -3,15 +3,18 @@
 This is a small suite of unit tests implemented with Ruby's test-unit that
 automatically check the redirection/DNS behavior of our domain names.
 
-To run, invoke `rake`.
-
-To run with output that lists each test run, invoke `rake TESTOPTS=-v`.
-
-To run a single test, run something like:
+## Running the tests
 
 ```sh
-rake TESTOPTS="--name=test_name"
+# All tests, concise output
+rake
 
-# Or invoke ruby directly
-ruby -Itest test/test_domains.rb -n test_name
+# All tests, printing each test name
+rake TESTOPTS=-v
+
+# Single test
+rake TESTOPTS="--name=test_alternate_domains_redirect_http_using_301"
+
+# Single test, invoking ruby directly
+ruby -Itest test/test_*.rb --name=test_alternate_domains_redirect_http_using_301
 ```
